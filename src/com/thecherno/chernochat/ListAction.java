@@ -49,8 +49,6 @@ public class ListAction implements ListSelectionListener {
 		selfClient.send(connection.getBytes());
 	}
 	
-	//public void removelistids()
-	
 	public void updateChatLists(List<ClientChatWindow> list){
 		chatWindowsList=list;
 	}
