@@ -23,16 +23,6 @@ import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.awt.event.ActionEvent;
 
-/*
-import sun.management.ConnectorAddressLink;  
-import sun.jvmstat.monitor.HostIdentifier;  
-import sun.jvmstat.monitor.Monitor;  
-import sun.jvmstat.monitor.MonitoredHost;  
-import sun.jvmstat.monitor.MonitoredVm;  
-import sun.jvmstat.monitor.MonitoredVmUtil;  
-import sun.jvmstat.monitor.MonitorException;  
-import sun.jvmstat.monitor.VmIdentifier;
-*/
 public class Login extends JFrame {
 	private static final long serialVersionUID = 1L;
 	private JPanel contentPane;
