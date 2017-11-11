@@ -1,36 +1,74 @@
 package com.thecherno.chernochat;
 
-import java.awt.List;
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.JList;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
-import com.thecherno.chernochat.Prompt;
-
-public class ListAction implements ListSelectionListener{
-	public boolean[] value;
-	private JList list;
-	private ArrayList<Prompt> prompts=new ArrayList<Prompt>();
+public class ListAction implements ListSelectionListener {
 	
-	public ListAction(JList list) {
-		value=new boolean[10];
-		this.list=list;
-		for(int i=0;i<10;i++)
-			value[i]=false;
+	private JList<String> listName;
+	private JList<Integer> listID;
+	private JList<String> listNameMain;
+	private JList<Integer> listIDMain;
+	private List<Integer> listids;
+	
+	private Client selfClient;
+	
+	private List<ClientChatWindow> chatWindowsList;
+	
+	public ListAction(Client selfClient,List<ClientChatWindow> chatWindowsList){
+		listName=new JList<String>();
+		listID=new JList<Integer>();
+		listNameMain=new JList<String>();
+		listIDMain=new JList<Integer>();
+		listids=new ArrayList<Integer>();
+		
+		this.selfClient=selfClient;
+		
+		this.chatWindowsList=chatWindowsList;
 	}
 	
 	public void valueChanged(ListSelectionEvent e) {
-		if(value[e.getFirstIndex()]==false) {
-			value[e.getFirstIndex()]=true;
-			System.out.println("list item selected: "+e.getLastIndex());
-			prompts.add(new Prompt( list.getModel().getElementAt(e.getFirstIndex()).toString() ));
+		String id=listIDMain.getModel().getElementAt(e.getFirstIndex()).toString();
+		for(int i=0;i<chatWindowsList.size();i++){
+			ClientChatWindow cw=chatWindowsList.get(i);
+			if(cw.getOtherID()==Integer.valueOf(id)){
+				if(cw.isVisible()==false){
+					cw.setVisible(true);
+				}
+				return;
+			}
 		}
-		else if(value[e.getFirstIndex()]==true&&!prompts.get(e.getFirstIndex()).isVisible()) {
-			value[e.getFirstIndex()]=false;
-			prompts.remove(e.getFirstIndex());
-		}
+		if(listids.contains(Integer.valueOf(id))) return;
+		listids.add(Integer.valueOf(id));
+		if(listIDMain.getModel().getSize()==0) return;
+		String connection="/p/"+"/c/"+selfClient.getID()+"/c/"+id+"/e/";		
+		selfClient.send(connection.getBytes());
 	}
 	
+	//public void removelistids()
+	
+	public void updateChatLists(List<ClientChatWindow> list){
+		chatWindowsList=list;
+	}
+	
+	public void updateUsersName(String[] list){
+		listName.setListData(list);
+	}
+	
+	public void updateUsersNameMain(String[] list){
+		listNameMain.setListData(list);
+	}
+
+	public void updateUsersID(Integer[] list) {
+		listID.setListData(list);
+	}
+	
+	public void updateUsersIDMain(Integer[] list){
+		listIDMain.setListData(list);
+	}
+
 }

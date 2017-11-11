@@ -13,6 +13,7 @@ public class Server implements Runnable{
 	
 	private List<ServerClient> clients=new ArrayList<ServerClient>();
 	private List<Integer> clientResponse=new ArrayList<Integer>();
+	private List<PCMembers> pcPairs=new ArrayList<PCMembers>();
 	
 	private int port;
 	private DatagramSocket socket;
@@ -124,7 +125,8 @@ public class Server implements Runnable{
 			public void run(){
 				while(running){
 					sendToAll("/i/server");
-					sendStatus();
+					sendStatusName();
+					sendStatusID();
 					try {
 						Thread.sleep(2000);
 					} catch (InterruptedException e) {
@@ -150,13 +152,23 @@ public class Server implements Runnable{
 		manage.start();
 	}
 	
-	private void sendStatus(){
+	private void sendStatusName(){
 		if(clients.size()<=0) return;
-		String users="/u/";
+		String users="/un/";
 		for(int i=0;i<clients.size()-1;i++){
 			users+=clients.get(i).name+"/n/";
 		}
 		users+=clients.get(clients.size()-1).name+"/e/";
+		sendToAll(users);
+	}
+	
+	private void sendStatusID(){
+		if(clients.size()<=0) return;
+		String users="/ui/";
+		for(int i=0;i<clients.size()-1;i++){
+			users+=clients.get(i).getID()+"/n/";
+		}
+		users+=clients.get(clients.size()-1).getID()+"/e/";
 		sendToAll(users);
 	}
 	
@@ -220,14 +232,19 @@ public class Server implements Runnable{
 			System.out.println("Identifier: "+id);
 			String name=string.split("/c/|/e/")[1];
 			System.out.println(name+"("+id+") connected!");
-			clients.add(new ServerClient(name,packet.getAddress(),packet.getPort(),id));
+			ServerClient c=new ServerClient(name,packet.getAddress(),packet.getPort(),id);
+			for(int i=0;i<clients.size();i++){
+				ServerClient cIterator=clients.get(i);
+				pcPairs.add(new PCMembers(c,cIterator,UniqueIdentifier.getIdentifier()));
+			}
+			clients.add(c);
 			System.out.println(packet.getAddress().toString()+" : "+packet.getPort());
 			String ID="/c/"+id;
 			send(ID,packet.getAddress(),packet.getPort());
 		}
 		else if(string.startsWith("/m/")){
 			sendToAll(string);
-			System.out.println(string.subSequence(3,string.indexOf("/e/")));
+			//System.out.println(string.subSequence(3,string.indexOf("/e/")));
 		}
 		else if(string.startsWith("/d/")){
 			String id=string.split("/d/|/e/")[1];
@@ -236,10 +253,83 @@ public class Server implements Runnable{
 		else if(string.startsWith("/i/")){
 			clientResponse.add(Integer.valueOf(string.split("/i/|/e/")[1]));
 		}
+		else if(string.startsWith("/p/")){
+			processPC(string.substring(3),packet);
+		}
 		else{
 			System.out.println(string);
 		}
 		
+	}
+	
+	private void processPC(String string,DatagramPacket packet){
+		if(string.startsWith("/c/")){
+			int id1=-1,id2=-1;
+			try{
+				id1=Integer.valueOf(string.split("/c/|/e/")[1]);	/*id of person which attempts connection for pc */
+				id2=Integer.valueOf(string.split("/c/|/e/")[2]);
+			}catch(Exception e){}
+			if(exists(id1)&&exists(id2)){
+				int pcid=-1;
+				PCMembers p=null;
+				for(int i=0;i<pcPairs.size();i++){
+					PCMembers pi=pcPairs.get(i);
+					if((pi.getClient1().getID()==id1&&pi.getClient2().getID()==id2)||(pi.getClient1().getID()==id2&&pi.getClient2().getID()==id1)){
+						pcid=pi.getPCID();
+						p=pi;
+						break;
+					}
+				}
+				if(pcid==-1) return;
+				ServerClient c1=search(id1);	/*id of person which attempts connection for pc */
+				ServerClient c2=search(id2);
+				String connection="/p/"+"/c/"+pcid;
+				String connection1=connection+"/c/"+c2.getName()+"/c/"+c2.getID()+"/c/"+"1"+"/e/";
+				String connection2=connection+"/c/"+c1.getName()+"/c/"+c1.getID()+"/c/"+"0"+"/e/";
+				send(connection1.getBytes(),c1.address,c1.port);
+				send(connection2.getBytes(),c2.address,c2.port);
+			}
+		}
+		else if(string.startsWith("/m/")){
+			int pcid=Integer.valueOf(string.split("/m/|/e/")[1]);
+			String text=string.split("/m/|/e/")[2];
+			PCMembers p=searchPC(pcid);
+			if(p==null) return;
+			ServerClient c1=p.getClient1();
+			ServerClient c2=p.getClient2();
+			String message="/p/"+"/m/"+pcid+"/m/"+text+"/e/";
+			send(message.getBytes(),c1.address,c1.port);
+			send(message.getBytes(),c2.address,c2.port);
+		}
+	}
+	
+	private PCMembers searchPC(int pcid){
+		for(int i=0;i<pcPairs.size();i++){
+			PCMembers p=pcPairs.get(i);
+			if(p.getPCID()==pcid)
+				return p;
+		}
+		return null;
+	}
+	
+	private ServerClient search(int id){
+		ServerClient c = null;
+		for(int i=0;i<clients.size();i++){
+			c=clients.get(i);
+			if(c.getID()==id)
+				break;
+		}
+		return c;
+	}
+	
+	private boolean exists(int id){
+		ServerClient c;
+		for(int i=0;i<clients.size();i++){
+			c=clients.get(i);
+			if(c.getID()==id)
+				return true;
+		}
+		return false;
 	}
 	
 	private void quit(){
@@ -253,6 +343,16 @@ public class Server implements Runnable{
 	private void disconnect(int id,boolean status){
 		ServerClient c=null;
 		boolean existed=false;
+		for(int i=0;i<pcPairs.size();i++){
+			PCMembers p=pcPairs.get(i);
+			if(p.getClient1().getID()==id||p.getClient2().getID()==id){
+				String disconnection="/p/"+"/d/"+p.getPCID()+"/e/";
+				if(p.getClient1().getID()==id) send(disconnection.getBytes(),p.getClient2().address,p.getClient2().port);
+				else send(disconnection.getBytes(),p.getClient2().address,p.getClient2().port);
+				pcPairs.remove(i);
+				i--;
+			}
+		}
 		for(int i=0;i<clients.size();i++){
 			if(clients.get(i).getID()==id){
 				c=clients.get(i);

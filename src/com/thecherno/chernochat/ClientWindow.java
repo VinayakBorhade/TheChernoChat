@@ -18,7 +18,9 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -53,6 +55,8 @@ public class ClientWindow extends JFrame implements Runnable {
 	
 	private OnlineUsers users;
 	
+	private List<ClientChatWindow> chatWindows=new ArrayList<ClientChatWindow>();
+	
 	public ClientWindow(String name, String address, int port) {
 		setTitle("Cherno Chat Client");
 		client=new Client(name,address,port);
@@ -70,7 +74,7 @@ public class ClientWindow extends JFrame implements Runnable {
 		console("Attempting a connection to "+address+": "+port+" , user: "+name);
 		String connection="/c/"+name+"/e/";
 		client.send(connection.getBytes());
-		users=new OnlineUsers();
+		users=new OnlineUsers(client,chatWindows);
 		run=new Thread(this,"Running");
 		running=true;
 		run.start();
@@ -98,11 +102,22 @@ public class ClientWindow extends JFrame implements Runnable {
 		mntmOnlineUsers.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				users.setVisible(true);
+				users.refresh();
 			}
 		});
 		mnFile.add(mntmOnlineUsers);
 		
 		mntmExit = new JMenuItem("Exit");
+		mntmExit.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				String disconnect="/d/"+client.getID()+"/e/";
+				send(disconnect,false);
+				running=false;
+				client.close();
+				dispose();
+				System.exit(0);
+			}
+		});
 		mnFile.add(mntmExit);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -200,16 +215,58 @@ public class ClientWindow extends JFrame implements Runnable {
 					} else if(message.startsWith("/i/")){
 						String text="/i/"+client.getID()+"/e/";
 						send(text,false);
-					} else if(message.startsWith("/u/")){
-						String[] u=message.split("/u/|/n/|/e/");
-						users.update(Arrays.copyOfRange(u, 1, u.length-1));
+					} else if(message.startsWith("/un/")){
+						String message1=message.split("/e/")[0]+"/e/";
+						String[] u=message1.split("/un/|/n/|/e/");
+						users.updateName(Arrays.copyOfRange(u, 0, u.length));
+					} else if(message.startsWith("/ui/")){
+						String message1=message.split("/e/")[0]+"/e/";
+						String[] u=message1.split("/ui/|/n/|/e/");
+						users.updateID(Arrays.copyOfRange(u, 0, u.length));
+					} else if(message.startsWith("/p/")){
+						processPC(message.substring(3));
 					}
-					
 				}
 			}
 		};
 		listen.start();
 	}
+	
+	private void processPC(String string){
+		if(string.startsWith("/c/")){
+			int pcid=Integer.valueOf(string.split("/c/|/e/")[1]);
+			String otherClientName=string.split("/c/|/e/")[2];
+			int otherClientID=Integer.valueOf(string.split("/c/|/e/")[3]);
+			ClientChatWindow cw=new ClientChatWindow(client,pcid,otherClientName,users.getLA(),otherClientID);
+			chatWindows.add(cw);
+			if(string.split("/c/|/e/")[4]=="1") cw.setVisible(true);
+			else cw.setVisible(false);
+		}
+		else if(string.startsWith("/m/")){
+			int pcid=Integer.valueOf(string.split("/m/|/e/")[1]);
+			
+			String message=string.split("/m/|/e/")[2];
+			for(int i=0;i<chatWindows.size();i++){
+				ClientChatWindow cw=chatWindows.get(i);
+				if(cw.getPCID()==pcid){
+					if(cw.isVisible()==false)	cw.setVisible(true);
+					cw.receive(message);
+					break;
+				}
+			}
+		}
+		else if(string.startsWith("/d/")){
+			int pcid=Integer.valueOf(string.split("/d/|/e/")[1]);
+			for(int i=0;i<chatWindows.size();i++){
+				ClientChatWindow cw=chatWindows.get(i);
+				if(cw.getPCID()==pcid){
+					cw.dispose();
+					break;
+				}
+			}
+		}
+	}
+	
 	
 	public void console(String message){
 		if(new String("").equals(message))

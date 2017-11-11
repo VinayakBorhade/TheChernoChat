@@ -86,6 +86,7 @@ public class Login extends JFrame {
 				String name=txtName.getText();
 				String address=txtAddress.getText();
 				int port=Integer.valueOf(txtPort.getText());
+				System.out.println("port: "+port);
 				login(name,address,port);
 			}
 		});
