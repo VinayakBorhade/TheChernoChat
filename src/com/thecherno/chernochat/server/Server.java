@@ -226,7 +226,7 @@ public class Server implements Runnable{
 	
 	public void process(DatagramPacket packet){
 		String string=new String(packet.getData());
-		if(raw) System.out.println(string);
+		if(raw) System.out.println(string.trim());
 		if(string.startsWith("/c/")){
 			int id=UniqueIdentifier.getIdentifier();
 			System.out.println("Identifier: "+id);

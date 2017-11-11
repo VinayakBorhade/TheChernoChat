@@ -2,6 +2,11 @@ package com.thecherno.chernochat;
 
 import java.util.*;
 import java.lang.*;
+import java.lang.management.ManagementFactory;
+import java.lang.management.RuntimeMXBean;
+import java.net.BindException;
+import java.net.InetAddress;
+import java.net.ServerSocket;
 import java.awt.BorderLayout;
 import java.awt.EventQueue;
 import java.awt.*;
@@ -15,8 +20,19 @@ import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.JLabel;
 import javax.swing.JButton;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 import java.awt.event.ActionEvent;
 
+/*
+import sun.management.ConnectorAddressLink;  
+import sun.jvmstat.monitor.HostIdentifier;  
+import sun.jvmstat.monitor.Monitor;  
+import sun.jvmstat.monitor.MonitoredHost;  
+import sun.jvmstat.monitor.MonitoredVm;  
+import sun.jvmstat.monitor.MonitoredVmUtil;  
+import sun.jvmstat.monitor.MonitorException;  
+import sun.jvmstat.monitor.VmIdentifier;
+*/
 public class Login extends JFrame {
 	private static final long serialVersionUID = 1L;
 	private JPanel contentPane;
@@ -27,6 +43,9 @@ public class Login extends JFrame {
 	private JLabel lblPort;
 	private JLabel lblAddressDesc;
 	private JLabel lblPortDesc;
+	
+	private static final int PORT = 9999;
+	private static ServerSocket socket;
 	
 	public Login() {
 		
@@ -93,6 +112,23 @@ public class Login extends JFrame {
 		btnLogin.setBounds(102, 283, 89, 23);
 		contentPane.add(btnLogin);
 	}
+	
+	private static void checkIfRunning() {
+		  try {
+		    //Bind to localhost adapter with a zero connection queue 
+		    socket = new ServerSocket(PORT,0,InetAddress.getByAddress(new byte[] {127,0,0,1}));
+		  }
+		  catch (BindException e) {
+		    System.err.println("Already running.");
+		    System.exit(1);
+		  }
+		  catch (IOException e) {
+		    System.err.println("Unexpected error.");
+		    e.printStackTrace();
+		    System.exit(2);
+		  }
+		}
+	
 	/**
 	 * login stuff here...
 	 */
@@ -104,6 +140,7 @@ public class Login extends JFrame {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
+					checkIfRunning();
 					Login frame = new Login();
 					frame.setVisible(true);
 				} catch (Exception e) {
