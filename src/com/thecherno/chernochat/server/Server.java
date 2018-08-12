@@ -271,12 +271,10 @@ public class Server implements Runnable{
 			}catch(Exception e){}
 			if(exists(id1)&&exists(id2)){
 				int pcid=-1;
-				PCMembers p=null;
 				for(int i=0;i<pcPairs.size();i++){
 					PCMembers pi=pcPairs.get(i);
 					if((pi.getClient1().getID()==id1&&pi.getClient2().getID()==id2)||(pi.getClient1().getID()==id2&&pi.getClient2().getID()==id1)){
 						pcid=pi.getPCID();
-						p=pi;
 						break;
 					}
 				}

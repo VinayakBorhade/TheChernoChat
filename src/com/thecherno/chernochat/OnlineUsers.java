@@ -105,7 +105,9 @@ public class OnlineUsers extends JFrame {
 		}
 		listName.setListData(ns);
 		listID.setListData(is);
-		la.updateUsersName(ns);
-		la.updateUsersID(is);
+		//la.updateUsersName(ns);/* redundant */
+		//la.updateUsersID(is);/* redundant */
+		la.updateUsersNameMain(ns);
+		la.updateUsersIDMain(is);
 	}
 }

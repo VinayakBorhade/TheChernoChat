@@ -9,10 +9,11 @@ import javax.swing.event.ListSelectionListener;
 
 public class ListAction implements ListSelectionListener {
 	
-	private JList<String> listName;
-	private JList<Integer> listID;
+	//private JList<String> listName;/* redundant */
+	//private JList<Integer> listID;/* redundant */
 	private JList<String> listNameMain;
 	private JList<Integer> listIDMain;
+	
 	private List<Integer> listids;
 	
 	private Client selfClient;
@@ -20,8 +21,8 @@ public class ListAction implements ListSelectionListener {
 	private List<ClientChatWindow> chatWindowsList;
 	
 	public ListAction(Client selfClient,List<ClientChatWindow> chatWindowsList){
-		listName=new JList<String>();
-		listID=new JList<Integer>();
+		//listName=new JList<String>();
+		//listID=new JList<Integer>();
 		listNameMain=new JList<String>();
 		listIDMain=new JList<Integer>();
 		listids=new ArrayList<Integer>();
@@ -53,17 +54,19 @@ public class ListAction implements ListSelectionListener {
 		chatWindowsList=list;
 	}
 	
-	public void updateUsersName(String[] list){
+	/*redundant*/
+	/*public void updateUsersName(String[] list){
 		listName.setListData(list);
-	}
+	}*/
 	
 	public void updateUsersNameMain(String[] list){
 		listNameMain.setListData(list);
 	}
 
-	public void updateUsersID(Integer[] list) {
+	/*redundant*/
+	/*public void updateUsersID(Integer[] list) {
 		listID.setListData(list);
-	}
+	}*/
 	
 	public void updateUsersIDMain(Integer[] list){
 		listIDMain.setListData(list);

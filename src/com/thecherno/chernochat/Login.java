@@ -23,6 +23,7 @@ import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.awt.event.ActionEvent;
 
+
 public class Login extends JFrame {
 	private static final long serialVersionUID = 1L;
 	private JPanel contentPane;
@@ -130,7 +131,7 @@ public class Login extends JFrame {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					checkIfRunning();
+					//checkIfRunning();
 					Login frame = new Login();
 					frame.setVisible(true);
 				} catch (Exception e) {

@@ -223,7 +223,11 @@ public class ClientWindow extends JFrame implements Runnable {
 						String message1=message.split("/e/")[0]+"/e/";
 						String[] u=message1.split("/ui/|/n/|/e/");
 						users.updateID(Arrays.copyOfRange(u, 0, u.length));
-					} else if(message.startsWith("/p/")){
+					} else if(message.startsWith("/d/")) {
+						running=false;
+						client.close();
+					}
+					else if(message.startsWith("/p/")){
 						processPC(message.substring(3));
 					}
 				}
@@ -261,6 +265,7 @@ public class ClientWindow extends JFrame implements Runnable {
 				ClientChatWindow cw=chatWindows.get(i);
 				if(cw.getPCID()==pcid){
 					cw.dispose();
+					chatWindows.remove(i);
 					break;
 				}
 			}
